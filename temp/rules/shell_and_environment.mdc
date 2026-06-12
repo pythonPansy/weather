@@ -1,0 +1,24 @@
+---
+description: Shell usage and target-environment command approval
+alwaysApply: true
+---
+
+# Shell commands and target environments
+
+## Shell commands (RTK)
+
+Prefix terminal commands with **`rtk`** when available (`rtk pytest`, `rtk git diff`, `rtk gh pr checks`). It compacts output; passthrough is safe if no filter exists.
+
+## Target environment approval
+
+**Always ask** before running any command that runs a command that is not read-only
+
+**Safe without asking** (local only):
+
+- `uv run pytest`, `ruff`, `sqlfluff`, `uv build`
+- `git diff`, `git status`, `git log`
+
+
+**When blocked or awaiting approval**: show the exact command for copy-paste; do not run it.
+
+Scoped workflow agents under `.github/instructions/` may define additional allowed commands for their flow; those do not override this rule unless the user explicitly invokes that workflow.

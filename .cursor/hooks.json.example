@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "python .cursor/ruff-after-file-edit.py"
+      }
+    ],
+    "stop": [
+      {
+        "command": "python .cursor/ruff-check-edited.py"
+      }
+    ]
+  }
+}

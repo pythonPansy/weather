@@ -1,0 +1,32 @@
+---
+description: Shell usage, RTK, and target-environment command approval
+alwaysApply: true
+---
+
+# Shell commands and target environments
+
+## Shell commands (RTK)
+
+Prefix agent terminal commands with **`rtk`** when available (`rtk uv run pytest`, `rtk git diff`, `rtk git status`). It compacts output; passthrough is safe if no filter exists.
+
+Transparent rewrite via global hook is preferred: `rtk init --global --agent cursor` (see `docs/ai_assisted_development.md`). Project rules are the fallback on native Windows or when RTK is not installed.
+
+## Target environment approval
+
+**Always ask** before running any command that is not read-only.
+
+**Safe without asking** (local only):
+
+- `rtk uv run pytest`, `rtk uv run ruff`
+- `uv sync`
+- `rtk git diff`, `rtk git status`, `rtk git log`
+
+**Requires approval**:
+
+- Live API calls with real keys (`WeatherAPITask` hits OpenWeatherMap)
+- `git push`, network `git pull`
+- Any deploy or production-side command
+
+**When blocked or awaiting approval**: show the exact command for copy-paste; do not run it.
+
+Override RTK for one command: `RTK_DISABLED=1 uv run pytest …`

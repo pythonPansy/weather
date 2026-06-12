@@ -10,16 +10,32 @@ dependencies = [
     "requests>=2.31.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest>=7.4.0",
-    "ruff>=0.1.0",
+    { include-group = "lint" },
+    { include-group = "test" },
 ]
+lint = [
+    "pre-commit>=4.0.0",
+    "ruff>=0.8.0",
+]
+test = [
+    "pytest>=7.4.0",
+]
+
+[tool.uv]
+preview = true
+package = false
 
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[tool.ty.src]
+include = ["src", "tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

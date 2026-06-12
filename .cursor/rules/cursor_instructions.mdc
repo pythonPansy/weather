@@ -1,0 +1,84 @@
+---
+description: Core weather pipeline standards (always on)
+alwaysApply: true
+---
+
+# weather — Cursor instructions
+
+This file and scoped rules under `.cursor/rules/` are the source of truth in Cursor.
+
+## Documentation
+
+Read the relevant doc first; do not rely on this file alone:
+
+- `docs/ai_assisted_development.md` — compound engineering workflow, hooks, RTK setup
+- `NextSteps.md` — learning roadmap (TDD, typed context, CLI)
+- Shell / environment commands: `.cursor/rules/shell_and_environment.mdc`
+
+## Agent context discipline
+
+- **Search before read**: `Grep` / `Glob` to locate symbols; then `Read` with `offset`/`limit` on files over ~200 lines.
+- **Narrow scope**: Prefer one module or one test file — not whole-tree reads.
+- **Tests**: `rtk uv run pytest <path> -q` — avoid `-v`, `--cov`, and `htmlcov` unless the user asks.
+- **Git**: `rtk git diff -- <paths>` before full-repo diff; stat/summary first.
+- **Replies**: Prefer counts, IDs, and file paths over pasting large query or log output.
+
+## Build, test, lint
+
+Package manager: **uv** (`uv.lock`). Python **3.11+**.
+
+```bash
+uv sync --extra dev
+rtk uv run ruff check ./src ./tests
+rtk uv run ruff format --check .
+rtk uv run pytest -q
+```
+
+Pre-commit: ruff check + ruff format (see `.pre-commit-config.yaml`).
+
+## Architecture
+
+Config-driven task runner for weather API ingestion.
+
+### Layout
+
+- `src/runner.py` — `TaskRunner` loads YAML config and runs tasks in sequence
+- `src/tasks/base.py` — `BaseTask` abstract interface (`run(context) -> context`)
+- `src/tasks/registry.py` — `register_task` decorator and `TASK_REGISTRY`
+- `src/tasks/ingest/` — ingestion tasks (e.g. `WeatherAPITask`)
+- `src/context.py` — shared context (evolving toward typed wrapper per `NextSteps.md`)
+- `tests/` — unit tests
+
+### Task pattern
+
+1. Subclass `BaseTask` and implement `run(self, context: dict) -> dict`
+2. Register with `@register_task("task_type")` in the task module
+3. Reference task type in YAML config under `tasks[].type`
+
+### YAML config
+
+```yaml
+tasks:
+  - type: weather_api
+    params:
+      latitude: 45.123
+      longitude: -73.456
+      api_key: ${OPENWEATHER_API_KEY}  # use env vars, never commit secrets
+```
+
+## Code style
+
+Python 3.11+, type hints on public API, 88 cols (Ruff in `pyproject.toml`). Small, testable modules. Mock external APIs in tests.
+
+### Common pitfalls
+
+1. No API keys or secrets in source — use environment variables.
+2. Register new tasks in `TASK_REGISTRY` via `@register_task`.
+3. Keep `context` immutable where practical; return updated dict from `run`.
+4. Mock `requests` in tests — do not call live APIs in unit tests.
+
+## Key conventions
+
+- Feature branches off `main`: `feature/<short-desc>` or `fix/<short-desc>`
+- Dependencies in `pyproject.toml` only
+- Agent shell commands: prefer `rtk uv run …` and `rtk git …` (see `shell_and_environment.mdc`)

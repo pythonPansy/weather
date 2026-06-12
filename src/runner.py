@@ -1,5 +1,7 @@
 import yaml
+
 from .tasks.registry import TASK_REGISTRY
+
 
 class TaskRunner:
     def __init__(self, config_path: str):

@@ -1,0 +1,41 @@
+---
+description: Compound engineering loop — plan and human approval before branch or code changes
+alwaysApply: true
+---
+
+# Compound engineering (repo-native)
+
+Each unit of work should make the next easier. Follow the loop; **never skip human gates**.
+
+## Loop
+
+`brainstorm (optional) → plan → **APPROVE** → work → review → compound`
+
+| Phase | Skill | Agent may edit code / create branch? |
+| ----- | ----- | -------------------------------------- |
+| Plan | `ce-plan` | **No** — read-only research + write plan doc only |
+| Work | `ce-work` | **Yes** — only after explicit user approval of the plan |
+| Compound | `ce-compound` | **No** — write solution doc; propose rule updates; apply rules only after approval |
+
+## Hard stops (non-negotiable)
+
+1. **No branch** (`git checkout -b`, worktrees) until the user approves the plan in chat.
+2. **No implementation edits** (`src/`, `tests/`, except the plan file itself under `docs/plans/`) until approval.
+3. **No target-environment commands** without approval — see `shell_and_environment.mdc`.
+4. **No commits** unless the user asks.
+
+## Approval phrases
+
+Proceed to `ce-work` only after the user clearly approves, e.g. *approved*, *proceed*, *implement the plan*, *LGTM*.
+
+If the user says *question only*, *explain*, or *review only* — stay read-only.
+
+## Artifacts
+
+- Requirements: `docs/brainstorms/` (optional)
+- Plans: `docs/plans/` — **required before work**
+- Learnings: `docs/solutions/` — after merge-worthy fixes
+
+## Opt-out
+
+User may say **skip plan** for trivial one-file fixes (typo, lint). Still no target-env commands without approval.
