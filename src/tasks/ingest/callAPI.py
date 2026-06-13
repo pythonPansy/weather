@@ -1,6 +1,6 @@
 import requests
-from .base import BaseTask
-from .registry import register_task
+from ..base import BaseTask
+from ..registry import register_task
 
 @register_task("weather_api")
 class WeatherAPITask(BaseTask):

@@ -16,11 +16,12 @@ dev = [
     { include-group = "test" },
 ]
 lint = [
-    "pre-commit>=4.0.0",
-    "ruff>=0.8.0",
+    "pre-commit~=4.0.0",
+    "ruff~=0.8.0",
 ]
 test = [
-    "pytest>=7.4.0",
+    "pytest~=7.4.0",
+    "pytest-mock~=3.14.0",
 ]
 
 [tool.uv]
@@ -39,3 +40,8 @@ include = ["src", "tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-m 'not live_api'"
+markers = [
+    "live_api: calls real external APIs; opt in with -m live_api",
+]

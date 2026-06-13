@@ -1,5 +1,5 @@
 from typing import Type
-from base import BaseTask
+from .base import BaseTask
 
 TASK_REGISTRY: dict[str, Type[BaseTask]] = {}
 
