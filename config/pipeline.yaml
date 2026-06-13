@@ -1,0 +1,9 @@
+tasks:
+  - type: weather_api
+    params:
+      latitude: 45.123
+      longitude: -73.456
+      api_key: ${OPENWEATHER_API_KEY}
+  - type: weather_parquet
+    params:
+      output_path: data/weather.parquet

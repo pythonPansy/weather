@@ -2,7 +2,8 @@ import os
 
 import pytest
 
-from src.tasks.ingest.callAPI import WeatherAPITask
+from src.tasks.ingest.weather_api import WeatherAPITask
+from tests.helpers import print_weather_response
 
 pytestmark = pytest.mark.live_api
 
@@ -21,6 +22,8 @@ def test_weather_task_calls_openweather_api():
     )
 
     result = task.run({})
+
+    print_weather_response(result["weather"])
 
     assert "weather" in result
     weather = result["weather"]

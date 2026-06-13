@@ -25,6 +25,7 @@ src/
     base.py          # BaseTask interface
     registry.py      # @register_task decorator
     ingest/          # API ingestion tasks
+    export/          # Parquet export tasks
 tests/
 docs/                # plans, brainstorms, solutions (compound engineering)
 .cursor/             # agent rules, skills, hooks
@@ -42,7 +43,7 @@ After cloning, restart Cursor and verify **Settings → Hooks** shows `afterFile
 
 ## Configuration
 
-Example task config:
+Example task config (chains ingest → Parquet export):
 
 ```yaml
 tasks:
@@ -51,6 +52,11 @@ tasks:
       latitude: 45.123
       longitude: -73.456
       api_key: ${OPENWEATHER_API_KEY}
+  - type: weather_parquet
+    params:
+      output_path: data/weather.parquet
 ```
 
-Never commit API keys — use environment variables.
+`weather_parquet` appends one row per run with `latitude`, `longitude`, `fetched_at`, and the full JSON `response`. Requires [pyarrow](https://arrow.apache.org/docs/python/) (installed via `uv sync`).
+
+Never commit API keys — use environment variables. Generated Parquet files under `data/` are gitignored.
