@@ -1,6 +1,6 @@
 import abc
 
-from src.context import PipelineContext
+from ..context import PipelineContext
 
 
 class BaseTask(abc.ABC):
