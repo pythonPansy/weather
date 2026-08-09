@@ -1,5 +1,6 @@
 import pytest
 
+from src.context import PipelineContext
 from src.tasks.ingest.tides_api import TidesAPITask
 
 pytestmark = pytest.mark.live_api
@@ -13,10 +14,10 @@ def test_tides_task_calls_tideturtle_api():
         }
     )
 
-    result = task.run({})
+    result = task.run(PipelineContext())
 
-    assert "tides" in result
-    tides = result["tides"]
+    assert result.tides is not None
+    tides = result.tides
     assert "extrema" in tides
     assert isinstance(tides["extrema"], list)
     assert len(tides["extrema"]) > 0

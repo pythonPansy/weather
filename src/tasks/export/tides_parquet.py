@@ -5,6 +5,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from ...context import PipelineContext
 from ...logging_config import get_logger
 from ..base import BaseTask
 from ..registry import register_task
@@ -27,20 +28,19 @@ class TidesParquetTask(BaseTask):
     def __init__(self, params: dict):
         self.params = params
 
-    def run(self, context: dict) -> dict:
-        if "tides" not in context:
-            raise KeyError("context is missing 'tides'; run tides_api first")
-        if "tides_call" not in context:
-            raise KeyError("context is missing 'tides_call'; run tides_api first")
+    def run(self, context: PipelineContext) -> PipelineContext:
+        tides = context.require("tides")
+        tides_call = context.require("tides_call")
+        if not isinstance(tides, dict) or not isinstance(tides_call, dict):
+            raise TypeError("tides and tides_call must be dicts")
 
         output_path = Path(self.params["output_path"])
-        tides_call = context["tides_call"]
 
         row = {
             "latitude": float(tides_call["latitude"]),
             "longitude": float(tides_call["longitude"]),
             "fetched_at": datetime.now(timezone.utc).isoformat(),
-            "response": json.dumps(context["tides"]),
+            "response": json.dumps(tides),
         }
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -49,5 +49,4 @@ class TidesParquetTask(BaseTask):
         row_count = pq.read_table(output_path).num_rows
         logger.info("Wrote parquet row to %s (%d rows total)", output_path, row_count)
 
-        context["tides_parquet_path"] = str(output_path)
-        return context
+        return context.with_values(tides_parquet_path=str(output_path))

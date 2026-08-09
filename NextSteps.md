@@ -64,7 +64,7 @@ In order:
 
 Add CSV export task
 
-Add context object (typed wrapper)
+~~Add context object (typed wrapper)~~ — done (`src/context.py` / `PipelineContext`)
 
 Add custom exceptions
 

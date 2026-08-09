@@ -3,6 +3,7 @@ import os
 import pyarrow.parquet as pq
 import pytest
 
+from src.context import PipelineContext
 from src.tasks.export.weather_parquet import WeatherParquetTask
 from src.tasks.ingest.weather_api import WeatherAPITask
 from tests.helpers import print_parquet_table, print_weather_response
@@ -25,8 +26,9 @@ def test_live_pipeline_writes_parquet(tmp_path):
     output_path = tmp_path / "weather.parquet"
     parquet_task = WeatherParquetTask(params={"output_path": str(output_path)})
 
-    context = api_task.run({})
-    print_weather_response(context["weather"])
+    context = api_task.run(PipelineContext())
+    assert context.weather is not None
+    print_weather_response(context.weather)
     parquet_task.run(context)
 
     table = pq.read_table(output_path)

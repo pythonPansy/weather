@@ -5,6 +5,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from ...context import PipelineContext
 from ...logging_config import get_logger
 from ..base import BaseTask
 from ..registry import register_task
@@ -27,20 +28,19 @@ class WeatherParquetTask(BaseTask):
     def __init__(self, params: dict):
         self.params = params
 
-    def run(self, context: dict) -> dict:
-        if "weather" not in context:
-            raise KeyError("context is missing 'weather'; run weather_api first")
-        if "weather_call" not in context:
-            raise KeyError("context is missing 'weather_call'; run weather_api first")
+    def run(self, context: PipelineContext) -> PipelineContext:
+        weather = context.require("weather")
+        weather_call = context.require("weather_call")
+        if not isinstance(weather, dict) or not isinstance(weather_call, dict):
+            raise TypeError("weather and weather_call must be dicts")
 
         output_path = Path(self.params["output_path"])
-        weather_call = context["weather_call"]
 
         row = {
             "latitude": float(weather_call["latitude"]),
             "longitude": float(weather_call["longitude"]),
             "fetched_at": datetime.now(timezone.utc).isoformat(),
-            "response": json.dumps(context["weather"]),
+            "response": json.dumps(weather),
         }
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -49,5 +49,4 @@ class WeatherParquetTask(BaseTask):
         row_count = pq.read_table(output_path).num_rows
         logger.info("Wrote parquet row to %s (%d rows total)", output_path, row_count)
 
-        context["parquet_path"] = str(output_path)
-        return context
+        return context.with_values(parquet_path=str(output_path))

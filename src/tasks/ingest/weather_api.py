@@ -1,5 +1,6 @@
 import requests
 
+from ...context import PipelineContext
 from ...logging_config import get_logger
 from ..base import BaseTask
 from ..registry import register_task
@@ -12,7 +13,7 @@ class WeatherAPITask(BaseTask):
     def __init__(self, params: dict):
         self.params = params
 
-    def run(self, context: dict) -> dict:
+    def run(self, context: PipelineContext) -> PipelineContext:
         api_key = self.params["api_key"]
         lat = self.params["latitude"]
         lon = self.params["longitude"]
@@ -23,9 +24,10 @@ class WeatherAPITask(BaseTask):
         response = requests.get(complete_url)
         response.raise_for_status()
 
-        context["weather_call"] = {
-            "latitude": lat,
-            "longitude": lon,
-        }
-        context["weather"] = response.json()
-        return context
+        return context.with_values(
+            weather_call={
+                "latitude": lat,
+                "longitude": lon,
+            },
+            weather=response.json(),
+        )
