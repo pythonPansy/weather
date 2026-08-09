@@ -1,3 +1,4 @@
+from src.context import PipelineContext
 from src.tasks.ingest.tides_api import TidesAPITask, normalise_tides_response
 
 
@@ -75,12 +76,12 @@ def test_tides_task_adds_tides_to_context(mocker):
         }
     )
 
-    result = task.run({})
+    result = task.run(PipelineContext())
 
-    assert "tides" in result
-    assert result["tides"]["place"]["name"] == "Salcombe"
-    assert result["tides"]["extrema"][0]["is_high"] is True
-    assert result["tides_call"] == {"latitude": 50.547, "longitude": -3.497}
+    assert result.tides is not None
+    assert result.tides["place"]["name"] == "Salcombe"
+    assert result.tides["extrema"][0]["is_high"] is True
+    assert result.tides_call == {"latitude": 50.547, "longitude": -3.497}
     mock_get.assert_called_once_with(
         "https://tideturtle.com/api/v1/tides",
         params={"lat": 50.547, "lon": -3.497},

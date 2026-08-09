@@ -1,3 +1,4 @@
+from src.context import PipelineContext
 from src.tasks.ingest.weather_api import WeatherAPITask
 
 
@@ -17,9 +18,8 @@ def test_weather_task_adds_weather_to_context(mocker):
         }
     )
 
-    result = task.run({})
+    result = task.run(PipelineContext())
 
-    assert "weather" in result
-    assert result["weather"]["main"]["temp"] == 10.5
-    assert result["weather_call"] == {"latitude": 45.0, "longitude": -73.0}
+    assert result.weather == {"main": {"temp": 10.5}}
+    assert result.weather_call == {"latitude": 45.0, "longitude": -73.0}
     mock_get.assert_called_once()

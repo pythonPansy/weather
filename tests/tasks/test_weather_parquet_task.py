@@ -1,16 +1,18 @@
 import json
 
 import pyarrow.parquet as pq
+import pytest
 
+from src.context import PipelineContext
 from src.tasks.export.weather_parquet import PARQUET_COLUMNS, WeatherParquetTask
 from tests.helpers import print_parquet_table
 
 
 def _sample_context():
-    return {
-        "weather_call": {"latitude": 45.0, "longitude": -73.0},
-        "weather": {"main": {"temp": 10.5}, "name": "Montreal"},
-    }
+    return PipelineContext(
+        weather_call={"latitude": 45.0, "longitude": -73.0},
+        weather={"main": {"temp": 10.5}, "name": "Montreal"},
+    )
 
 
 def test_writes_row_to_new_parquet_file(tmp_path):
@@ -26,9 +28,9 @@ def test_writes_row_to_new_parquet_file(tmp_path):
     assert table.column("latitude")[0].as_py() == 45.0
     assert table.column("longitude")[0].as_py() == -73.0
     response = json.loads(table.column("response")[0].as_py())
-    assert response == _sample_context()["weather"]
-    assert result["parquet_path"] == str(output_path)
-    assert result["weather"] == _sample_context()["weather"]
+    assert response == _sample_context().weather
+    assert result.parquet_path == str(output_path)
+    assert result.weather == _sample_context().weather
 
 
 def test_appends_second_row(tmp_path):
@@ -37,10 +39,10 @@ def test_appends_second_row(tmp_path):
 
     task.run(_sample_context())
     task.run(
-        {
-            "weather_call": {"latitude": 46.0, "longitude": -74.0},
-            "weather": {"main": {"temp": 12.0}},
-        }
+        PipelineContext(
+            weather_call={"latitude": 46.0, "longitude": -74.0},
+            weather={"main": {"temp": 12.0}},
+        )
     )
 
     table = pq.read_table(output_path)
@@ -54,21 +56,25 @@ def test_raises_when_weather_missing(tmp_path):
     output_path = tmp_path / "weather.parquet"
     task = WeatherParquetTask(params={"output_path": str(output_path)})
 
-    try:
-        task.run({"weather_call": {"latitude": 45.0, "longitude": -73.0}})
-        raised = False
-    except KeyError as exc:
-        raised = True
-        assert "weather" in str(exc)
-
-    assert raised
+    with pytest.raises(KeyError, match="weather"):
+        task.run(
+            PipelineContext(
+                weather_call={"latitude": 45.0, "longitude": -73.0},
+            )
+        )
 
 
 def test_does_not_store_api_key(tmp_path):
     output_path = tmp_path / "weather.parquet"
     task = WeatherParquetTask(params={"output_path": str(output_path)})
-    context = _sample_context()
-    context["weather_call"]["api_key"] = "secret-should-not-persist"
+    context = PipelineContext(
+        weather_call={
+            "latitude": 45.0,
+            "longitude": -73.0,
+            "api_key": "secret-should-not-persist",
+        },
+        weather={"main": {"temp": 10.5}, "name": "Montreal"},
+    )
 
     task.run(context)
 

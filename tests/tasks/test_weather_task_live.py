@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from src.context import PipelineContext
 from src.tasks.ingest.weather_api import WeatherAPITask
 from tests.helpers import print_weather_response
 
@@ -21,11 +22,11 @@ def test_weather_task_calls_openweather_api():
         }
     )
 
-    result = task.run({})
+    result = task.run(PipelineContext())
 
-    print_weather_response(result["weather"])
+    assert result.weather is not None
+    print_weather_response(result.weather)
 
-    assert "weather" in result
-    weather = result["weather"]
+    weather = result.weather
     assert "main" in weather
     assert isinstance(weather["main"]["temp"], (int, float))
