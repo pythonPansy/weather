@@ -38,14 +38,14 @@ Pre-commit: ruff check + ruff format (see `.pre-commit-config.yaml`).
 
 ## Architecture
 
-Config-driven task runner for weather API ingestion.
+Config-driven task runner for weather and tides API ingestion.
 
 ### Layout
 
 - `src/runner.py` — `TaskRunner` loads YAML config and runs tasks in sequence
 - `src/tasks/base.py` — `BaseTask` abstract interface (`run(context) -> context`)
 - `src/tasks/registry.py` — `register_task` decorator and `TASK_REGISTRY`
-- `src/tasks/ingest/` — ingestion tasks (e.g. `WeatherAPITask`)
+- `src/tasks/ingest/` — ingestion tasks (e.g. `WeatherAPITask`, `TidesAPITask`)
 - `src/context.py` — shared context (evolving toward typed wrapper per `NextSteps.md`)
 - `tests/` — unit tests
 
@@ -64,11 +64,15 @@ tasks:
       latitude: 45.123
       longitude: -73.456
       api_key: ${OPENWEATHER_API_KEY}  # use env vars, never commit secrets
+  - type: tides_api
+    params:
+      latitude: 50.547
+      longitude: -3.497
 ```
 
 ## Code style
 
-Python 3.11+, type hints on public API, 88 cols (Ruff in `pyproject.toml`). Small, testable modules. Mock external APIs in tests.
+Python 3.11+, type hints on public API, 88 cols (Ruff in `pyproject.toml`). Small, testable modules. Mock external APIs in tests. UK English for code and schema (see `uk_english.mdc`).
 
 ### Common pitfalls
 
