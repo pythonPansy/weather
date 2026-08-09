@@ -7,3 +7,10 @@ tasks:
   - type: weather_parquet
     params:
       output_path: data/weather.parquet
+  - type: tides_api
+    params:
+      latitude: 50.547
+      longitude: -3.497
+  - type: tides_parquet
+    params:
+      output_path: data/tides.parquet

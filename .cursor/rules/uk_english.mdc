@@ -1,0 +1,43 @@
+---
+description: Use UK English for all code, schema, comments, and docs in this repo
+alwaysApply: true
+---
+
+# UK English (not US English)
+
+All project code, schema, identifiers, comments, commit messages, and docs in this
+repository must use **UK English** spelling and terminology.
+
+## Required spellings
+
+Prefer UK forms, for example:
+
+| Prefer (UK) | Avoid (US) |
+| ----------- | ---------- |
+| licence | license |
+| colour | color |
+| favour | favor |
+| behaviour | behavior |
+| centre | center |
+| metre / metres | meter / meters |
+| organise | organize |
+| normalise | normalize |
+| summarise | summarize |
+| catalogue | catalog |
+| dialogue | dialog |
+
+## Schema and API surface
+
+- Field names, YAML keys, context keys, Parquet columns, and JSON we own must use
+  UK English (`licence`, `time_zone`, `height_m` with metres documented as such).
+- When ingesting a third-party payload that uses US spelling or camelCase, map it
+  into the project's UK-English schema before storing it in `context` or Parquet.
+- Do not rename upstream query parameters required by an external API (e.g. keep
+  TideTurtle's `lat` / `lon` on the wire); only our owned schema uses UK English.
+
+## Code style notes
+
+- Function and variable names follow UK spelling (`normalise_*`, not `normalize_*`).
+- Log messages, docstrings, and rule/docs prose use UK English.
+- Exception: established library/API identifiers that cannot change
+  (`timezone` in Python's stdlib, vendor package names, upstream HTTP params).
