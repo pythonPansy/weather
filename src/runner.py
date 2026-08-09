@@ -2,6 +2,7 @@ import yaml
 
 import src.tasks  # noqa: F401 — register tasks via side-effect imports
 
+from .config_env import expand_env_vars
 from .context import PipelineContext
 from .logging_config import get_logger
 from .tasks.registry import TASK_REGISTRY
@@ -12,7 +13,7 @@ logger = get_logger(__name__)
 class TaskRunner:
     def __init__(self, config_path: str):
         with open(config_path) as f:
-            self.config = yaml.safe_load(f)
+            self.config = expand_env_vars(yaml.safe_load(f))
 
     def run(self) -> PipelineContext:
         context = PipelineContext()

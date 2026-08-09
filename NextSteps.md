@@ -70,7 +70,7 @@ Add custom exceptions
 
 Add task dependencies
 
-Add CLI (python -m fish_pipeline pipeline.yaml)
+~~Add CLI (python -m src config/pipeline.yaml)~~ — done (`src/__main__.py` + env expansion)
 
 Add mypy typing
 

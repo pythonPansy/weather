@@ -10,9 +10,12 @@ class PipelineContext:
 
     weather: dict | None = None
     weather_call: dict | None = None
+    weather_forecast: dict | None = None
+    weather_forecast_call: dict | None = None
     tides: dict | None = None
     tides_call: dict | None = None
     parquet_path: str | None = None
+    weather_forecast_parquet_path: str | None = None
     tides_parquet_path: str | None = None
 
     def with_values(self, **kwargs: Any) -> PipelineContext:

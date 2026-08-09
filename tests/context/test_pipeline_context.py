@@ -8,9 +8,12 @@ def test_defaults_are_none():
 
     assert context.weather is None
     assert context.weather_call is None
+    assert context.weather_forecast is None
+    assert context.weather_forecast_call is None
     assert context.tides is None
     assert context.tides_call is None
     assert context.parquet_path is None
+    assert context.weather_forecast_parquet_path is None
     assert context.tides_parquet_path is None
 
 
