@@ -10,11 +10,15 @@ uv run pytest -q
 uv run ruff check ./src ./tests
 ```
 
-Install pre-commit hooks (optional):
+## Contributing
 
-```bash
-uv run pre-commit install
-```
+**All changes must be made via feature branches and pull requests.**
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Feature branch and PR workflow (required)
+- UK English code standards (required)
+- Linting and testing requirements
+- Pre-commit and Cursor hooks setup
 
 ## Run the pipeline
 
@@ -168,6 +172,24 @@ This repo uses a human-in-the-loop compound engineering workflow. See [docs/ai_a
 - Optional [RTK](https://www.rtk-ai.app/) setup for token-efficient agent shell commands
 
 After cloning, restart Cursor and verify **Settings → Hooks** shows `afterFileEdit` and `stop`.
+
+### Automated Checks
+
+This repository enforces code quality through:
+
+1. **Cursor hooks** (`.cursor/hooks.json`):
+   - Auto-lint and format on file edit
+   - Check all edited files on agent stop
+   
+2. **GitHub Actions CI** (`.github/workflows/ci.yml`):
+   - Lint and format checks
+   - Test suite execution
+   - UK English spelling enforcement
+   - Feature branch workflow enforcement (no direct commits to main)
+   
+3. **Pre-commit hooks** (`.pre-commit-config.yaml`):
+   - Manual: `uv run pre-commit run --all-files`
+   - Runs ruff check and format
 
 ## Configuration
 

@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      
+      - name: Set up Python
+        run: uv python install 3.11
+      
+      - name: Install dependencies
+        run: uv sync --group dev
+      
+      - name: Run ruff linting
+        run: uv run ruff check ./src ./tests
+      
+      - name: Check ruff formatting
+        run: uv run ruff format --check .
+      
+      - name: Run tests
+        run: uv run pytest -q
+      
+      - name: Run tests with coverage (optional)
+        run: |
+          uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -q
+        continue-on-error: true
+        if: github.event_name == 'pull_request'
+
+  check-uk-english:
+    name: Check UK English Usage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for US English spellings
+        run: |
+          echo "Checking for common US English spellings that should be UK English..."
+          
+          # Define patterns to search for (US spelling)
+          US_PATTERNS=(
+            "license[^d]"  # license (but not licensed)
+            "color[^a-z]"  # color (but not colorant, etc.)
+            "behavior"
+            "meter[^s]"    # meter (but allow metres)
+            "organize"
+            "normalize"
+            "center[^s]"   # center (but allow centres)
+          )
+          
+          FOUND_ISSUES=0
+          
+          # Search in Python files, YAML files, and Markdown files
+          for pattern in "${US_PATTERNS[@]}"; do
+            echo "Checking for: $pattern"
+            if git grep -n -E "$pattern" -- '*.py' '*.yaml' '*.yml' '*.md' ':!.github/workflows/ci.yml' ':!uv.lock' 2>/dev/null; then
+              FOUND_ISSUES=1
+              echo "❌ Found US English spelling: $pattern"
+            fi
+          done
+          
+          if [ $FOUND_ISSUES -eq 1 ]; then
+            echo ""
+            echo "❌ US English spellings found. Please use UK English:"
+            echo "  - license → licence"
+            echo "  - color → colour"
+            echo "  - behavior → behaviour"
+            echo "  - meter → metre"
+            echo "  - organize → organise"
+            echo "  - normalize → normalise"
+            echo "  - center → centre"
+            exit 1
+          else
+            echo "✅ No US English spellings found"
+          fi
+
+  enforce-branch-workflow:
+    name: Enforce Branch Workflow
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Check branch is not main
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.actor }}" != "dependabot[bot]" ]; then
+            echo "❌ Direct commits to main branch are not allowed!"
+            echo "Please create a feature branch and open a pull request."
+            exit 1
+          else
+            echo "✅ Branch workflow check passed"
+          fi
