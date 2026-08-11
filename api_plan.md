@@ -1,0 +1,1 @@
+https://github.com/pythonPansy/tight_lines_app/blob/main/WEATHER_APP_INTEGRATION_SPEC.md
