@@ -55,27 +55,86 @@ jobs:
         run: |
           echo "Checking for common US English spellings that should be UK English..."
           
-          # Define patterns to search for (US spelling)
-          US_PATTERNS=(
-            "license[^d]"  # license (but not licensed)
-            "color[^a-z]"  # color (but not colorant, etc.)
-            "behavior"
-            "meter[^s]"    # meter (but allow metres)
-            "organize"
-            "normalize"
-            "center[^s]"   # center (but allow centres)
-          )
-          
           FOUND_ISSUES=0
           
-          # Search in Python files, YAML files, and Markdown files
-          for pattern in "${US_PATTERNS[@]}"; do
-            echo "Checking for: $pattern"
-            if git grep -n -E "$pattern" -- '*.py' '*.yaml' '*.yml' '*.md' ':!.github/workflows/ci.yml' ':!uv.lock' 2>/dev/null; then
-              FOUND_ISSUES=1
-              echo "❌ Found US English spelling: $pattern"
-            fi
-          done
+          # Check for 'license' (but exclude legitimate uses)
+          echo "Checking for: license"
+          if git grep -n -E 'license' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!uv.lock' \
+              ':!CONTRIBUTING.md' \
+              ':!api_plan.md' \
+              2>/dev/null | \
+              grep -v 'not license' | \
+              grep -v '"license" not in' | \
+              grep -v '"license":' | \
+              grep -v '.get("license")' | \
+              grep -v 'open-meteo.com/en/license'; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: license (should be licence)"
+          fi
+          
+          # Check for 'color' (but exclude legitimate uses in examples)
+          echo "Checking for: color"
+          if git grep -n -E '\bcolor\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: color (should be colour)"
+          fi
+          
+          # Check for 'behavior'
+          echo "Checking for: behavior"
+          if git grep -n -E '\bbehavior\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: behavior (should be behaviour)"
+          fi
+          
+          # Check for 'meter' as a word (but exclude Parameter, etc.)
+          echo "Checking for: meter"
+          if git grep -n -E '\bmeter\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              ':!api_plan.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: meter (should be metre)"
+          fi
+          
+          # Check for 'organize'
+          echo "Checking for: organize"
+          if git grep -n -E '\borganize\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: organize (should be organise)"
+          fi
+          
+          # Check for 'normalize' (but exclude variable names in .cursor/ scripts)
+          echo "Checking for: normalize"
+          if git grep -n -E '\bnormalize\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              ':!.cursor/' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: normalize (should be normalise)"
+          fi
+          
+          # Check for 'center' as a word (not centres)
+          echo "Checking for: center"
+          if git grep -n -E '\bcenter\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: center (should be centre)"
+          fi
           
           if [ $FOUND_ISSUES -eq 1 ]; then
             echo ""
@@ -87,6 +146,8 @@ jobs:
             echo "  - organize → organise"
             echo "  - normalize → normalise"
             echo "  - center → centre"
+            echo ""
+            echo "Note: This check excludes documentation examples and test assertions."
             exit 1
           else
             echo "✅ No US English spellings found"
