@@ -39,6 +39,103 @@ Each Parquet export appends one row per run with `latitude`, `longitude`, `fetch
 
 Never commit API keys or collected `data/` files.
 
+## REST API
+
+The weather app provides REST API endpoints for tide locations and predictions.
+
+### Start the API server
+
+```bash
+uv run uvicorn src.api.main:app --reload --port 8001
+```
+
+The API will be available at `http://localhost:8001` with interactive documentation at `http://localhost:8001/docs`.
+
+### API Endpoints
+
+#### `GET /api/locations`
+
+Returns all available tide locations.
+
+**Example:**
+
+```bash
+curl http://localhost:8001/api/locations | jq
+```
+
+**Response:**
+
+```json
+[
+  {
+    "id": "plym-uk-001",
+    "name": "Plymouth",
+    "region": "South Devon",
+    "latitude": 50.3755,
+    "longitude": -4.1427
+  },
+  ...
+]
+```
+
+#### `GET /api/tides/{location_id}`
+
+Returns tide predictions for a specific location and date range.
+
+**Query Parameters:**
+
+- `start`: Start date/time in ISO 8601 format (e.g., `2026-08-11T00:00:00Z`)
+- `end`: End date/time in ISO 8601 format (e.g., `2026-08-18T23:59:59Z`)
+
+**Example:**
+
+```bash
+curl "http://localhost:8001/api/tides/plym-uk-001?start=2026-08-11T00:00:00Z&end=2026-08-18T23:59:59Z" | jq
+```
+
+**Response:**
+
+```json
+{
+  "tides": [
+    {
+      "time": "2026-08-11T05:23:00Z",
+      "type": "high",
+      "height": 4.8,
+      "phase": "spring"
+    },
+    {
+      "time": "2026-08-11T11:42:00Z",
+      "type": "low",
+      "height": 1.2,
+      "phase": "spring"
+    },
+    ...
+  ]
+}
+```
+
+**Tide Phase Classification:**
+
+- `"spring"`: Spring tide (high tidal range)
+- `"neap"`: Neap tide (low tidal range)
+- `"medium"`: Medium tide (between spring and neap)
+- `null`: Phase classification unavailable
+
+### API Testing
+
+Run API tests:
+
+```bash
+uv run pytest tests/api/ -q
+```
+
+Run API tests including live API calls:
+
+```bash
+uv run pytest tests/api/ -m live_api
+```
+
 ## Project layout
 
 ```
@@ -46,11 +143,17 @@ src/
   __main__.py        # CLI: python -m src <config.yaml>
   runner.py          # TaskRunner — loads YAML, expands env, runs tasks
   context.py         # PipelineContext shared state
+  api/
+    main.py          # FastAPI application
+    models.py        # Pydantic models (Location, TideEvent, etc.)
+    services.py      # Business logic for locations and tides
   tasks/
     base.py          # BaseTask interface
     registry.py      # @register_task decorator
     ingest/          # API ingestion tasks
     export/          # Parquet export tasks
+config/
+  locations.yaml     # Tide locations configuration
 tests/
 docs/                # plans, brainstorms, solutions (compound engineering)
 .cursor/             # agent rules, skills, hooks
