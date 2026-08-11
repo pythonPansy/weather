@@ -2,7 +2,7 @@
 created: YYYY-MM-DD
 category: conventions
 symptoms:
-  - "error message or observable behavior"
+  - "error message or observable behaviour"
 prevention: "actionable rule or check for next time"
 ---
 

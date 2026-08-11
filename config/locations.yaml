@@ -1,0 +1,41 @@
+locations:
+  - id: plym-uk-001
+    name: Plymouth
+    region: South Devon
+    latitude: 50.3755
+    longitude: -4.1427
+  - id: salc-uk-002
+    name: Salcombe
+    region: South Devon
+    latitude: 50.2378
+    longitude: -3.7698
+  - id: dart-uk-003
+    name: Dartmouth
+    region: South Devon
+    latitude: 50.3521
+    longitude: -3.5805
+  - id: torb-uk-004
+    name: Torbay
+    region: South Devon
+    latitude: 50.4619
+    longitude: -3.5253
+  - id: mine-uk-005
+    name: Minehead
+    region: North Somerset
+    latitude: 51.2036
+    longitude: -3.4723
+  - id: lynm-uk-006
+    name: Lynmouth
+    region: North Devon
+    latitude: 51.2289
+    longitude: -3.8311
+  - id: ilf-uk-007
+    name: Ilfracombe
+    region: North Devon
+    latitude: 51.2089
+    longitude: -4.1177
+  - id: bide-uk-008
+    name: Bideford
+    region: North Devon
+    latitude: 51.0167
+    longitude: -4.2083

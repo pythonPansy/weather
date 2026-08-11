@@ -27,7 +27,7 @@ This teaches you:
 
 Mocking external APIs
 
-Testing behavior, not implementation
+Testing behaviour, not implementation
 
 Isolation
 
@@ -52,7 +52,7 @@ How to write testable code
 
 How to structure a real project
 
-How config drives behavior
+How config drives behaviour
 
 How to evolve safely using tests
 

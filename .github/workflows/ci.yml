@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+      
+      - name: Set up Python
+        run: uv python install 3.11
+      
+      - name: Install dependencies
+        run: uv sync --group dev
+      
+      - name: Run ruff linting
+        run: uv run ruff check ./src ./tests
+      
+      - name: Check ruff formatting
+        run: uv run ruff format --check .
+      
+      - name: Run tests
+        run: uv run pytest -q
+      
+      - name: Run tests with coverage (optional)
+        run: |
+          uv run pytest --cov=src --cov-report=term-missing --cov-report=xml -q
+        continue-on-error: true
+        if: github.event_name == 'pull_request'
+
+  check-uk-english:
+    name: Check UK English Usage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for US English spellings
+        run: |
+          echo "Checking for common US English spellings that should be UK English..."
+          
+          FOUND_ISSUES=0
+          
+          # Check for 'license' (but exclude legitimate uses)
+          echo "Checking for: license"
+          if git grep -n -E 'license' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!uv.lock' \
+              ':!CONTRIBUTING.md' \
+              ':!api_plan.md' \
+              2>/dev/null | \
+              grep -v 'not license' | \
+              grep -v '"license" not in' | \
+              grep -v '"license":' | \
+              grep -v '.get("license")' | \
+              grep -v 'open-meteo.com/en/license'; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: license (should be licence)"
+          fi
+          
+          # Check for 'color' (but exclude legitimate uses in examples)
+          echo "Checking for: color"
+          if git grep -n -E '\bcolor\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: color (should be colour)"
+          fi
+          
+          # Check for 'behavior'
+          echo "Checking for: behavior"
+          if git grep -n -E '\bbehavior\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: behavior (should be behaviour)"
+          fi
+          
+          # Check for 'meter' as a word (but exclude Parameter, etc.)
+          echo "Checking for: meter"
+          if git grep -n -E '\bmeter\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              ':!api_plan.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: meter (should be metre)"
+          fi
+          
+          # Check for 'organize'
+          echo "Checking for: organize"
+          if git grep -n -E '\borganize\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: organize (should be organise)"
+          fi
+          
+          # Check for 'normalize' (but exclude variable names in .cursor/ scripts)
+          echo "Checking for: normalize"
+          if git grep -n -E '\bnormalize\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              ':!.cursor/' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: normalize (should be normalise)"
+          fi
+          
+          # Check for 'center' as a word (not centres)
+          echo "Checking for: center"
+          if git grep -n -E '\bcenter\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
+              ':!.github/workflows/ci.yml' \
+              ':!CONTRIBUTING.md' \
+              2>/dev/null; then
+            FOUND_ISSUES=1
+            echo "❌ Found US English spelling: center (should be centre)"
+          fi
+          
+          if [ $FOUND_ISSUES -eq 1 ]; then
+            echo ""
+            echo "❌ US English spellings found. Please use UK English:"
+            echo "  - license → licence"
+            echo "  - color → colour"
+            echo "  - behavior → behaviour"
+            echo "  - meter → metre"
+            echo "  - organize → organise"
+            echo "  - normalize → normalise"
+            echo "  - center → centre"
+            echo ""
+            echo "Note: This check excludes documentation examples and test assertions."
+            exit 1
+          else
+            echo "✅ No US English spellings found"
+          fi
+
+  enforce-branch-workflow:
+    name: Enforce Branch Workflow
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Check branch is not main
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.actor }}" != "dependabot[bot]" ]; then
+            echo "❌ Direct commits to main branch are not allowed!"
+            echo "Please create a feature branch and open a pull request."
+            exit 1
+          else
+            echo "✅ Branch workflow check passed"
+          fi
