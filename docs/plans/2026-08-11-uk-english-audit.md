@@ -22,11 +22,12 @@ The project has an established UK English rule (`.cursor/rules/uk_english.mdc`) 
 
 ### In scope
 
-- **Code review**: Search for common US English patterns in Python source files
+- **Code review**: Search for common US English patterns in Python source files (function names, variable names, string literals)
 - **Schema verification**: Check data models, YAML configs, context fields, Parquet columns
 - **Documentation audit**: Review all `.md` files including README, plans, templates, api_plan
 - **Test verification**: Ensure tests validate UK English schema (e.g. `licence` vs `license`)
-- **Comment audit**: Verify docstrings and comments use UK English
+- **Comment audit**: Verify all docstrings, inline comments, and code comments use UK English
+- **Identifier audit**: Verify all function names, class names, and variable names use UK English
 
 ### Out of scope
 
@@ -104,11 +105,14 @@ Based on existing code patterns:
 
 | Category | Files | Status |
 | -------- | ----- | ------ |
-| Schema/Context | `src/context.py`, `src/tasks/ingest/*.py` | UK English ✓ |
+| Schema/Context | `src/context.py`, `src/tasks/ingest/*.py`, `src/tasks/export/*.py` | UK English ✓ |
 | Configuration | `config/pipeline.yaml`, `pyproject.toml` | UK English ✓ |
-| Tests | `tests/tasks/test_*.py`, `tests/context/*.py` | UK English ✓ |
+| Tests | All `tests/**/*.py` files | UK English ✓ |
 | Documentation | All `*.md` files, `.cursor/rules/*.mdc` | UK English ✓ |
-| Code comments | Docstrings, inline comments | UK English ✓ |
+| Code comments | Docstrings (e.g. `expand_env_vars`, `register_task`) | UK English ✓ |
+| Inline comments | All Python inline comments | UK English ✓ |
+| Function names | `normalise_tides_response`, not `normalize_*` | UK English ✓ |
+| String literals | Log messages, error messages | UK English ✓ |
 
 ## Validation
 
@@ -127,7 +131,7 @@ rg 'licence|time_zone|height_m' --type py
 
 ### Compliant patterns found
 
-1. **Function naming**: `normalise_tides_response` (UK English)
+1. **Function naming**: `normalise_tides_response` (UK English), not `normalize_*`
 2. **Schema mapping**: Properly maps upstream US English to UK English:
    - `license` → `licence` (TideTurtle API)
    - `timezone` → `time_zone` (owned schema field)
@@ -135,6 +139,10 @@ rg 'licence|time_zone|height_m' --type py
 3. **Test validation**: `test_normalise_tides_response_uses_uk_english_schema()` validates correct spelling
 4. **Documentation**: "metres" used in api_plan.md (line 123)
 5. **Context fields**: All `PipelineContext` fields use UK English
+6. **Docstrings**: All use UK English (e.g. "Expand whole-string", "Register a task class")
+7. **Comments**: Inline comments use UK English (e.g. "register tasks via side-effect imports")
+8. **Log messages**: All use UK English (e.g. "Starting pipeline", "Pipeline finished successfully")
+9. **Error messages**: All use UK English (e.g. "environment variable", "context is missing")
 
 ### Exceptions (correctly handled)
 
