@@ -1,10 +1,16 @@
 ---
-status: approved
+status: completed
 created: 2026-08-09
 approval: approved
+completed: 2026-08-09
 ---
 
 # Plan: Typed pipeline context wrapper
+
+## Implementation status
+
+**Completed** — merged on `main` (PR #2). `PipelineContext` in `src/context.py`; all ingest/export
+tasks and tests migrated.
 
 ## Goal
 
@@ -102,3 +108,4 @@ rtk uv run pytest tests/context tests/tasks/test_weather_task.py tests/tasks/tes
 
 - [ ] **waiting** — user has not approved
 - [x] **approved** — date: 2026-08-09 (user: "Build")
+- [x] **completed** — date: 2026-08-09 (PR #2 on `main`)

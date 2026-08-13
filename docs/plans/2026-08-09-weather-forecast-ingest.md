@@ -1,10 +1,16 @@
 ---
-status: approved
+status: completed
 created: 2026-08-09
 approval: approved
+completed: 2026-08-09
 ---
 
 # Plan: Weather forecast ingest (alongside current actuals)
+
+## Implementation status
+
+**Completed** — merged on `main` (PR #3). `weather_forecast_api` and `weather_forecast_parquet`
+tasks wired in `config/pipeline.yaml` with mocked and live-gated tests.
 
 ## Goal
 
@@ -127,3 +133,4 @@ rtk uv run pytest tests/tasks/test_weather_forecast_task_live.py -m live_api -q
 
 - [ ] **waiting** — stored for later; user has not approved implementation
 - [x] **approved** — date: 2026-08-09 (user: implement outstanding plans)
+- [x] **completed** — date: 2026-08-09 (PR #3 on `main`)

@@ -1,10 +1,18 @@
 ---
-status: approved
+status: completed
 created: 2026-08-09
 approval: approved
+completed: 2026-08-09
 ---
 
 # Plan: CLI, env expansion, and first data collection
+
+## Implementation status
+
+**Completed** — merged on `main` (PR #3). `src/config_env.py`, `src/__main__.py`, and tests in
+`tests/test_config_env.py` and `tests/test_main.py`. README documents the one-shot pipeline run.
+
+Optional follow-ups (out of scope): cron/Task Scheduler example; manual live smoke with real API key.
 
 ## Goal
 
@@ -119,3 +127,4 @@ uv run python -m src config/pipeline.yaml
 
 - [ ] **waiting** — stored for later; user has not approved implementation
 - [x] **approved** — date: 2026-08-09 (user: implement outstanding plans; CLI only, no orchestration)
+- [x] **completed** — date: 2026-08-09 (PR #3 on `main`)
