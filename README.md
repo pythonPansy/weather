@@ -147,10 +147,8 @@ src/
   __main__.py        # CLI: python -m src <config.yaml>
   runner.py          # TaskRunner — loads YAML, expands env, runs tasks
   context.py         # PipelineContext shared state
-  api/
-    main.py          # FastAPI application
-    models.py        # Pydantic models (Location, TideEvent, etc.)
-    services.py      # Business logic for locations and tides
+  api/               # FastAPI — YAML-backed locations (legacy)
+  weather/           # FastAPI — SQLite + Admiralty Discovery (Tight Lines)
   tasks/
     base.py          # BaseTask interface
     registry.py      # @register_task decorator
@@ -173,25 +171,53 @@ This repo uses a human-in-the-loop compound engineering workflow. See [docs/ai_a
 
 After cloning, restart Cursor and verify **Settings → Hooks** shows `afterFileEdit` and `stop`.
 
-### Automated Checks
+### Automated checks
 
 This repository enforces code quality through:
 
 1. **Cursor hooks** (`.cursor/hooks.json`):
    - Auto-lint and format on file edit
    - Check all edited files on agent stop
-   
+
 2. **GitHub Actions CI** (`.github/workflows/ci.yml`):
    - Lint and format checks
    - Test suite execution
    - UK English spelling enforcement
    - Feature branch workflow enforcement (no direct commits to main)
-   
+
 3. **Pre-commit hooks** (`.pre-commit-config.yaml`):
    - Manual: `uv run pre-commit run --all-files`
    - Runs ruff check and format
 
-## Configuration
+## Service mode (Tight Lines integration)
+
+REST API for tide locations and predictions on port **8001** (preferred for Tight Lines):
+
+```bash
+uv sync --group dev
+uv run alembic upgrade head
+rtk uv run uvicorn src.weather.main:app --reload --port 8001
+```
+
+Endpoints: `GET /api/locations`, `GET /api/tides/{location_id}`, `GET /health`.
+
+See [docs/plans/weather-api-provider.md](docs/plans/weather-api-provider.md) and
+[docs/integration/tight_lines_consumer.md](docs/integration/tight_lines_consumer.md).
+
+Copy `.env.example` to `.env`. For live tides, set `TIDE_DATA_SOURCE=admiralty_discovery` and
+add your Admiralty Discovery subscription key — see
+[docs/integration/admiralty_discovery.md](docs/integration/admiralty_discovery.md).
+Use `TIDE_DATA_SOURCE=fixture` for offline development without signup.
+
+Alternative YAML-backed API entry point: `uv run uvicorn src.api.main:app --reload --port 8001`.
+
+### Deployment order
+
+1. Deploy this weather app first (port 8001 in dev).
+2. Deploy Tight Lines with `WEATHER_APP_BASE_URL` pointing at this service.
+3. Verify `GET /api/locations` and tide endpoints before enabling notifications.
+
+## Task runner mode
 
 Example task config (chains ingest → Parquet export):
 

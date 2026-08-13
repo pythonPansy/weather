@@ -21,6 +21,7 @@ Read the relevant doc first; do not rely on this file alone:
 - **Narrow scope**: Prefer one module or one test file — not whole-tree reads.
 - **Tests**: `rtk uv run pytest <path> -q` — avoid `-v`, `--cov`, and `htmlcov` unless the user asks.
 - **Git**: `rtk git diff -- <paths>` before full-repo diff; stat/summary first.
+- **Shell**: prefix with `rtk` for git, pytest, ruff, docker, psql, and other supported tools (see `shell_and_environment.mdc`).
 - **Replies**: Prefer counts, IDs, and file paths over pasting large query or log output.
 
 ## Build, test, lint
