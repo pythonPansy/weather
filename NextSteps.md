@@ -1,91 +1,40 @@
-6. Test-Driven Development (important part)
-Example: test BEFORE implementation
+# Next steps
 
-tests/tasks/test_weather_task.py
+The repo now runs in two modes:
 
-from fish_pipeline.tasks.weather import WeatherAPITask
+1. **Service mode** — FastAPI tide API on port 8001 for [Tight Lines integration](docs/integration/tight_lines_consumer.md).
+   Use `src.weather.main:app` (SQLite + Admiralty Discovery ingest) or the YAML-backed `src.api.main:app`.
+2. **Task runner mode** — YAML-driven ingestion via `TaskRunner` (`weather_api`, `tide_ingest`, Parquet export tasks).
 
-def test_weather_task_adds_weather_to_context(mocker):
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = {"hourly": {"temperature_2m": [10, 11]}}
-    mock_response.raise_for_status.return_value = None
+## Completed
 
-    mocker.patch("requests.get", return_value=mock_response)
+- REST API: `GET /api/locations`, `GET /api/tides/{location_id}`
+- Fixture and Admiralty Discovery tide ingest with spring/neap/medium phase classification
+- Alembic migrations, pytest coverage for API routes
+- Integration with Tight Lines consumer (`WEATHER_APP_BASE_URL`)
+- Typed `PipelineContext`, CLI entry point (`python -m src`), Parquet export tasks
 
-    task = WeatherAPITask(
-        params={"latitude": 45.0, "longitude": -73.0}
-    )
-
-    context = {}
-    result = task.run(context)
-
-    assert "weather" in result
-    assert result["weather"]["hourly"]["temperature_2m"] == [10, 11]
-
-
-This teaches you:
-
-Mocking external APIs
-
-Testing behaviour, not implementation
-
-Isolation
-
-Run tests:
-
-pytest
-
-7. YAML config example
-tasks:
-  - type: weather_api
-    params:
-      latitude: 45.123
-      longitude: -73.456
-
-8. Why this setup is ideal for learning
-
-You’ll learn:
-
-How to design interfaces
-
-How to write testable code
-
-How to structure a real project
-
-How config drives behaviour
-
-How to evolve safely using tests
-
-This is much better than jumping straight into frameworks.
-
-Recommended learning path (next steps)
+## Recommended next steps
 
 In order:
 
-Add CSV export task
+1. **Consolidate API layers** — merge `src/api/` (YAML locations) and `src/weather/` (DB + Admiralty) behind one entry point
+2. **CSV export task** — export ingested data from task runner context
+3. **Custom exceptions** — structured errors for task failures
+4. **Task dependencies** — chain tasks with explicit ordering
+5. **mypy typing** — strict checks on public API
+6. **Incremental runs** — skip unchanged data on re-run
 
-~~Add context object (typed wrapper)~~ — done (`src/context.py` / `PipelineContext`)
+## Testing
 
-Add custom exceptions
+```bash
+rtk uv run pytest tests -q
+rtk uv run ruff check ./src ./tests
+```
 
-Add task dependencies
+Smoke test (service running on 8001):
 
-~~Add CLI (python -m src config/pipeline.yaml)~~ — done (`src/__main__.py` + env expansion)
-
-Add mypy typing
-
-Add incremental runs
-
-Next question for you
-
-To guide the next step precisely:
-
-Python version you’re using?
-
-Do you want to write tests first together (true TDD)?
-
-Should context stay a dict or become a class?
-
-Are you comfortable with pytest already?
-
-This is a very strong foundation — you’re setting yourself up well.
+```bash
+curl http://localhost:8001/api/locations
+curl "http://localhost:8001/api/tides/plym-uk-001?start=2026-08-11T00:00:00Z&end=2026-08-18T00:00:00Z"
+```

@@ -5,11 +5,26 @@ alwaysApply: true
 
 # Shell commands and target environments
 
-## Shell commands (RTK)
+## Shell commands (RTK) — required
 
-Prefix agent terminal commands with **`rtk`** when available (`rtk uv run pytest`, `rtk git diff`, `rtk git status`). It compacts output; passthrough is safe if no filter exists.
+**Always** prefix agent shell commands with **`rtk`** when RTK supports the underlying tool (~60–90% token savings on pytest, git, ruff). Passthrough is safe if no filter exists.
 
-Transparent rewrite via global hook is preferred: `rtk init --global --agent cursor` (see `docs/ai_assisted_development.md`). Project rules are the fallback on native Windows or when RTK is not installed.
+Two layers (use both on native Windows):
+
+1. **Global hook** — `rtk init --global --agent cursor` adds `preToolUse` to `~/.cursor/hooks.json` (see `docs/ai_assisted_development.md`).
+2. **Explicit prefix** — agents still write `rtk uv run …`, `rtk git …` in every command (required on Windows; recommended everywhere).
+
+| Use RTK for | Example |
+| ----------- | ------- |
+| Git | `rtk git status`, `rtk git diff -- <paths>`, `rtk git log -5` |
+| Tests | `rtk uv run pytest <path> -q` |
+| Lint / format | `rtk uv run ruff check ./src ./tests` |
+| Docker | `rtk docker compose ps`, `rtk docker compose logs --tail=20` |
+| Postgres | `rtk psql …` |
+| Diffs / find | `rtk diff …`, `rtk find …` |
+| Large file reads | prefer the `Read` tool; shell fallback: `rtk read <file>` |
+
+Install (Windows): extract `rtk-x86_64-pc-windows-msvc.zip` to `%USERPROFILE%\.local\bin` and add to PATH. Verify: `rtk --version`, `rtk gain`. Do **not** use `pip install rtk` (wrong package).
 
 ## Target environment approval
 
@@ -20,6 +35,8 @@ Transparent rewrite via global hook is preferred: `rtk init --global --agent cur
 - `rtk uv run pytest`, `rtk uv run ruff`
 - `uv sync`
 - `rtk git diff`, `rtk git status`, `rtk git log`
+- Local `alembic` against the local dev database
+- Local `rtk uv run uvicorn` for development (port 8001)
 
 **Requires approval**:
 
