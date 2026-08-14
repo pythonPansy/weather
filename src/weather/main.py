@@ -1,4 +1,4 @@
-"""FastAPI application for tide and location API."""
+"""FastAPI application for tide, location, and current weather API."""
 
 import logging
 from collections.abc import AsyncIterator
@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from src.weather.db import Base, get_engine, get_session_factory
 from src.weather.routes import api
 from src.weather.services.ingest import run_tide_ingest
+from src.weather.services.ingest_weather import run_weather_ingest
 from src.weather.services.locations import seed_locations
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,10 @@ scheduler = AsyncIOScheduler()
 
 async def _daily_tide_ingest() -> None:
     await run_tide_ingest()
+
+
+async def _hourly_weather_ingest() -> None:
+    await run_weather_ingest()
 
 
 @asynccontextmanager
@@ -38,8 +43,15 @@ async def lifespan(
     except Exception as exc:
         logger.warning("Tide ingest failed: %s", exc)
 
+    try:
+        weather_ingested = await run_weather_ingest()
+        logger.info("Weather ingest complete: %s observations stored", weather_ingested)
+    except Exception as exc:
+        logger.warning("Weather ingest failed: %s", exc)
+
     if start_scheduler:
         scheduler.add_job(_daily_tide_ingest, "cron", hour=2, minute=0)
+        scheduler.add_job(_hourly_weather_ingest, "cron", minute=0)
         scheduler.start()
     yield
     if start_scheduler:

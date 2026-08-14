@@ -14,6 +14,7 @@ Read the relevant doc first; do not rely on this file alone:
 - `docs/ai_assisted_development.md` — compound engineering workflow, hooks, RTK setup
 - `NextSteps.md` — learning roadmap (TDD, typed context, CLI)
 - Shell / environment commands: `.cursor/rules/shell_and_environment.mdc`
+- Tight Lines clients: `.cursor/rules/tight_lines_clients.mdc` — same API for website and iOS; admin stays on Tight Lines web
 
 ## Agent context discipline
 

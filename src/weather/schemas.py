@@ -22,3 +22,12 @@ class TidePredictionRead(BaseModel):
 
 class TideListResponse(BaseModel):
     tides: list[TidePredictionRead]
+
+
+class WeatherRead(BaseModel):
+    summary: str | None = None
+    wind_speed_mph: float | None = None
+    wind_direction: str | None = None
+    temperature_c: float | None = None
+    conditions: str | None = None
+    observed_at: datetime | None = None

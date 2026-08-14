@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.weather.db import get_session
-from src.weather.schemas import LocationRead, TideListResponse
+from src.weather.schemas import LocationRead, TideListResponse, WeatherRead
 from src.weather.services.tides import get_tides_for_location, list_locations
+from src.weather.services.weather import get_weather_for_location
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -33,3 +34,11 @@ async def api_get_tides(
         raise HTTPException(status_code=400, detail="Invalid date format") from exc
 
     return await get_tides_for_location(session, location_id, start_dt, end_dt)
+
+
+@router.get("/weather/{location_id}", response_model=WeatherRead)
+async def api_get_weather(
+    location_id: str,
+    session: AsyncSession = Depends(get_session),
+) -> WeatherRead:
+    return await get_weather_for_location(session, location_id)

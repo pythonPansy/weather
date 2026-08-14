@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for locations and tide predictions."""
+"""SQLAlchemy ORM models for locations, tides, and current weather."""
 
 from datetime import datetime
 from decimal import Decimal
@@ -25,6 +25,9 @@ class Location(Base):
     )
 
     tides: Mapped[list["TidePrediction"]] = relationship(back_populates="location")
+    weather_observation: Mapped["WeatherObservation | None"] = relationship(
+        back_populates="location"
+    )
 
 
 class TidePrediction(Base):
@@ -45,3 +48,21 @@ class TidePrediction(Base):
     )
 
     location: Mapped[Location] = relationship(back_populates="tides")
+
+
+class WeatherObservation(Base):
+    __tablename__ = "weather_observations"
+
+    location_id: Mapped[str] = mapped_column(
+        ForeignKey("locations.id", ondelete="CASCADE"), primary_key=True
+    )
+    summary: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    wind_speed_mph: Mapped[Decimal | None] = mapped_column(Numeric(5, 1), nullable=True)
+    wind_direction: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    temperature_c: Mapped[Decimal | None] = mapped_column(Numeric(5, 1), nullable=True)
+    conditions: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    observed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+    location: Mapped[Location] = relationship(back_populates="weather_observation")
