@@ -64,6 +64,7 @@ jobs:
               ':!uv.lock' \
               ':!CONTRIBUTING.md' \
               ':!api_plan.md' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null | \
               grep -v 'not license' | \
               grep -v '"license" not in' | \
@@ -79,6 +80,7 @@ jobs:
           if git grep -n -E '\bcolor\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
               ':!.github/workflows/ci.yml' \
               ':!CONTRIBUTING.md' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null; then
             FOUND_ISSUES=1
             echo "❌ Found US English spelling: color (should be colour)"
@@ -89,6 +91,7 @@ jobs:
           if git grep -n -E '\bbehavior\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
               ':!.github/workflows/ci.yml' \
               ':!CONTRIBUTING.md' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null; then
             FOUND_ISSUES=1
             echo "❌ Found US English spelling: behavior (should be behaviour)"
@@ -100,6 +103,7 @@ jobs:
               ':!.github/workflows/ci.yml' \
               ':!CONTRIBUTING.md' \
               ':!api_plan.md' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null; then
             FOUND_ISSUES=1
             echo "❌ Found US English spelling: meter (should be metre)"
@@ -110,6 +114,7 @@ jobs:
           if git grep -n -E '\borganize\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
               ':!.github/workflows/ci.yml' \
               ':!CONTRIBUTING.md' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null; then
             FOUND_ISSUES=1
             echo "❌ Found US English spelling: organize (should be organise)"
@@ -121,6 +126,7 @@ jobs:
               ':!.github/workflows/ci.yml' \
               ':!CONTRIBUTING.md' \
               ':!.cursor/' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null; then
             FOUND_ISSUES=1
             echo "❌ Found US English spelling: normalize (should be normalise)"
@@ -131,6 +137,7 @@ jobs:
           if git grep -n -E '\bcenter\b' -- '*.py' '*.yaml' '*.yml' '*.md' \
               ':!.github/workflows/ci.yml' \
               ':!CONTRIBUTING.md' \
+              ':!docs/plans/2026-08-11-uk-english-audit.md' \
               2>/dev/null; then
             FOUND_ISSUES=1
             echo "❌ Found US English spelling: center (should be centre)"
