@@ -16,8 +16,9 @@ from src.weather.services.openweather_client import (
 CANNED_OBSERVED_AT = datetime(2026, 8, 14, 7, 0, tzinfo=UTC)
 CANNED_OWM_PAYLOAD = {
     "weather": [{"id": 800, "main": "Clear", "description": "clear sky"}],
-    "main": {"temp": 12.04, "feels_like": 11.0},
+    "main": {"temp": 12.04, "feels_like": 11.0, "pressure": 1013, "humidity": 72},
     "wind": {"speed": 3.576, "deg": 225},
+    "clouds": {"all": 10},
     "dt": int(CANNED_OBSERVED_AT.timestamp()),
 }
 
@@ -74,6 +75,11 @@ def test_map_openweather_payload() -> None:
     assert mapped.wind_direction == "SW"
     assert mapped.observed_at == CANNED_OBSERVED_AT
     assert mapped.summary == "Clear sky, 12.0°C, SW 8.0 mph"
+    assert mapped.pressure_hpa == 1013.0
+    assert mapped.humidity_pct == 72
+    assert mapped.cloud_cover_pct == 10
+    assert mapped.moon_phase is not None
+    assert mapped.swell_height_m is None
 
 
 def test_map_openweather_payload_missing_wind() -> None:

@@ -1,7 +1,7 @@
 # Weather API provider plan
 
 Implements the REST API contract defined in the Tight Lines repo:
-[tight_lines_app/WEATHER_APP_INTEGRATION_SPEC.md](../../tight_lines_app/WEATHER_APP_INTEGRATION_SPEC.md)
+[fishing_brain_app/WEATHER_APP_INTEGRATION_SPEC.md](../../fishing_brain_app/WEATHER_APP_INTEGRATION_SPEC.md)
 
 ## Endpoints
 

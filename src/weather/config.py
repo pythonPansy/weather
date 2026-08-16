@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     tide_location_ids: str = ""
     weather_data_source: str = "fixture"
     openweather_api_key: SecretStr = SecretStr("")
+    weather_at_tolerance_hours: int = 3
+    weather_history_retention_days: int = 90
 
     def tide_location_id_list(self) -> list[str]:
         """Optional comma-separated location IDs to ingest (empty = all)."""
@@ -40,6 +42,20 @@ class Settings(BaseSettings):
             raise ValueError(
                 "TIDE_FORECAST_DAYS must be between 1 and 7 (Discovery tier)"
             )
+        return value
+
+    @field_validator("weather_at_tolerance_hours")
+    @classmethod
+    def validate_at_tolerance(cls, value: int) -> int:
+        if not 1 <= value <= 24:
+            raise ValueError("WEATHER_AT_TOLERANCE_HOURS must be between 1 and 24")
+        return value
+
+    @field_validator("weather_history_retention_days")
+    @classmethod
+    def validate_history_retention(cls, value: int) -> int:
+        if not 1 <= value <= 365:
+            raise ValueError("WEATHER_HISTORY_RETENTION_DAYS must be between 1 and 365")
         return value
 
     def require_admiralty_api_key(self) -> str:

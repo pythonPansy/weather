@@ -1,9 +1,10 @@
-# Tight Lines consumer integration
+# Fishing Brain consumer integration
 
-Tight Lines consumes this weather app via `WEATHER_APP_BASE_URL`.
+Fishing Brain consumes this weather app via `WEATHER_APP_BASE_URL`.
 
-Contract: see `tight_lines_app/WEATHER_APP_INTEGRATION_SPEC.md` in the sibling
-repo, plus `GET /api/weather/{location_id}` for current conditions.
+Contract: see `fishing_brain_app/WEATHER_APP_INTEGRATION_SPEC.md` in the sibling
+repo (product name: Fishing Brain), plus `GET /api/weather/{location_id}` for
+current conditions.
 
 Start this service with `src.weather.main:app` on port 8001 (not `src.api.main:app`).
 
@@ -13,5 +14,5 @@ Start this service with `src.weather.main:app` on port 8001 (not `src.api.main:a
 ## Deployment order
 
 1. Start weather app on port 8001
-2. Configure Tight Lines `WEATHER_APP_BASE_URL=http://localhost:8001`
-3. Tight Lines syncs locations on startup and queries tides and weather on demand
+2. Configure Fishing Brain `WEATHER_APP_BASE_URL=http://localhost:8001`
+3. Fishing Brain syncs locations on startup and queries tides and weather on demand

@@ -47,13 +47,25 @@ async def test_ingest_openweather_skips_failures(session_factory) -> None:
         wind_direction="SW",
         temperature_c=12.0,
         conditions="Clear sky",
+        pressure_hpa=1013.0,
+        cloud_cover_pct=10,
+        humidity_pct=72,
+        moon_phase="Waxing crescent",
+        swell_height_m=None,
+        swell_period_s=None,
+        swell_direction=None,
         observed_at=datetime(2026, 8, 14, 7, 0, tzinfo=UTC),
     )
 
+    async def _current_side_effect(*_args, **_kwargs):
+        call = mock_client.get_current_weather.await_count
+        if call == 2:
+            raise OpenWeatherApiError("boom")
+        return weather
+
     mock_client = AsyncMock()
-    mock_client.get_current_weather = AsyncMock(
-        side_effect=[weather, OpenWeatherApiError("boom")] + [weather] * 20
-    )
+    mock_client.get_current_weather = AsyncMock(side_effect=_current_side_effect)
+    mock_client.get_forecast = AsyncMock(return_value=[weather])
     mock_client.close = AsyncMock()
 
     with patch(

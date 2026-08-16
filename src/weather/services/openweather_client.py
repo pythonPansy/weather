@@ -1,4 +1,4 @@
-"""Client for OpenWeatherMap current weather API."""
+"""Client for OpenWeatherMap current weather and 5-day forecast APIs."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from src.weather.config import OPENWEATHER_SIGNUP_URL
+from src.weather.services.moon import moon_phase_name
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +28,26 @@ class OpenWeatherApiError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class CurrentWeather:
+class WeatherPoint:
+    """Normalised weather point (observation or forecast timestep)."""
+
     summary: str | None
     wind_speed_mph: float | None
     wind_direction: str | None
     temperature_c: float | None
     conditions: str | None
+    pressure_hpa: float | None
+    cloud_cover_pct: int | None
+    humidity_pct: int | None
+    moon_phase: str | None
+    swell_height_m: float | None
+    swell_period_s: float | None
+    swell_direction: str | None
     observed_at: datetime
+
+
+# Backwards-compatible alias used by ingest and tests.
+CurrentWeather = WeatherPoint
 
 
 def metres_per_second_to_mph(speed_mps: float) -> float:
@@ -68,7 +82,19 @@ def build_summary(
     return ", ".join(parts) if parts else None
 
 
-def map_openweather_payload(payload: dict[str, Any]) -> CurrentWeather:
+def _optional_float(value: object | None) -> float | None:
+    if value is None:
+        return None
+    return round(float(value), 1)  # type: ignore[arg-type]
+
+
+def _optional_int(value: object | None) -> int | None:
+    if value is None:
+        return None
+    return int(value)  # type: ignore[arg-type]
+
+
+def map_openweather_payload(payload: dict[str, Any]) -> WeatherPoint:
     weather_items = payload.get("weather") or []
     raw_description = None
     if weather_items:
@@ -76,8 +102,9 @@ def map_openweather_payload(payload: dict[str, Any]) -> CurrentWeather:
     conditions = str(raw_description).strip().capitalize() if raw_description else None
 
     main = payload.get("main") or {}
-    raw_temp = main.get("temp")
-    temperature_c = round(float(raw_temp), 1) if raw_temp is not None else None
+    temperature_c = _optional_float(main.get("temp"))
+    pressure_hpa = _optional_float(main.get("pressure"))
+    humidity_pct = _optional_int(main.get("humidity"))
 
     wind = payload.get("wind") or {}
     raw_speed = wind.get("speed")
@@ -86,6 +113,9 @@ def map_openweather_payload(payload: dict[str, Any]) -> CurrentWeather:
     )
     raw_deg = wind.get("deg")
     wind_direction = degrees_to_compass(float(raw_deg)) if raw_deg is not None else None
+
+    clouds = payload.get("clouds") or {}
+    cloud_cover_pct = _optional_int(clouds.get("all"))
 
     raw_dt = payload.get("dt")
     if raw_dt is not None:
@@ -99,18 +129,25 @@ def map_openweather_payload(payload: dict[str, Any]) -> CurrentWeather:
         wind_direction=wind_direction,
         wind_speed_mph=wind_speed_mph,
     )
-    return CurrentWeather(
+    return WeatherPoint(
         summary=summary,
         wind_speed_mph=wind_speed_mph,
         wind_direction=wind_direction,
         temperature_c=temperature_c,
         conditions=conditions,
+        pressure_hpa=pressure_hpa,
+        cloud_cover_pct=cloud_cover_pct,
+        humidity_pct=humidity_pct,
+        moon_phase=moon_phase_name(observed_at),
+        swell_height_m=None,
+        swell_period_s=None,
+        swell_direction=None,
         observed_at=observed_at,
     )
 
 
 class OpenWeatherClient:
-    """HTTP client for OpenWeatherMap current weather."""
+    """HTTP client for OpenWeatherMap current weather and forecast."""
 
     def __init__(self, api_key: str, *, timeout: float = 30.0):
         if not api_key.strip():
@@ -126,7 +163,7 @@ class OpenWeatherClient:
 
     async def get_current_weather(
         self, latitude: float, longitude: float
-    ) -> CurrentWeather:
+    ) -> WeatherPoint:
         response = await self._client.get(
             "/data/2.5/weather",
             params={
@@ -138,6 +175,27 @@ class OpenWeatherClient:
         )
         _raise_for_status(response)
         return map_openweather_payload(response.json())
+
+    async def get_forecast(
+        self, latitude: float, longitude: float
+    ) -> list[WeatherPoint]:
+        """Fetch free-tier 5-day / 3-hour forecast timesteps."""
+        response = await self._client.get(
+            "/data/2.5/forecast",
+            params={
+                "lat": latitude,
+                "lon": longitude,
+                "appid": self._api_key,
+                "units": "metric",
+            },
+        )
+        _raise_for_status(response)
+        payload = response.json()
+        points: list[WeatherPoint] = []
+        for item in payload.get("list") or []:
+            if isinstance(item, dict):
+                points.append(map_openweather_payload(item))
+        return points
 
 
 def _raise_for_status(response: httpx.Response) -> None:
