@@ -17,24 +17,16 @@ def upgrade() -> None:
         batch_op.add_column(
             sa.Column("pressure_hpa", sa.Numeric(precision=6, scale=1), nullable=True)
         )
-        batch_op.add_column(
-            sa.Column("cloud_cover_pct", sa.Integer(), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("humidity_pct", sa.Integer(), nullable=True)
-        )
+        batch_op.add_column(sa.Column("cloud_cover_pct", sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column("humidity_pct", sa.Integer(), nullable=True))
         batch_op.add_column(
             sa.Column("moon_phase", sa.String(length=32), nullable=True)
         )
         batch_op.add_column(
-            sa.Column(
-                "swell_height_m", sa.Numeric(precision=5, scale=2), nullable=True
-            )
+            sa.Column("swell_height_m", sa.Numeric(precision=5, scale=2), nullable=True)
         )
         batch_op.add_column(
-            sa.Column(
-                "swell_period_s", sa.Numeric(precision=5, scale=1), nullable=True
-            )
+            sa.Column("swell_period_s", sa.Numeric(precision=5, scale=1), nullable=True)
         )
         batch_op.add_column(
             sa.Column("swell_direction", sa.String(length=8), nullable=True)
