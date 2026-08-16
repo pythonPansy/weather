@@ -45,7 +45,9 @@ Never commit API keys or collected `data/` files.
 
 ## REST API
 
-The weather app provides REST API endpoints for tide locations and predictions.
+The YAML-backed entry point below (`src.api.main:app`) serves locations and tides
+only. **Tight Lines must use** `src.weather.main:app` (see Service mode) so
+`GET /api/weather/{location_id}` is available.
 
 ### Start the API server
 
@@ -191,7 +193,8 @@ This repository enforces code quality through:
 
 ## Service mode (Tight Lines integration)
 
-REST API for tide locations and predictions on port **8001** (preferred for Tight Lines):
+REST API for tide locations, predictions, and current weather on port **8001**
+(preferred for Tight Lines — use `src.weather.main:app`, not `src.api.main:app`):
 
 ```bash
 uv sync --group dev
@@ -199,7 +202,8 @@ uv run alembic upgrade head
 rtk uv run uvicorn src.weather.main:app --reload --port 8001
 ```
 
-Endpoints: `GET /api/locations`, `GET /api/tides/{location_id}`, `GET /health`.
+Endpoints: `GET /api/locations`, `GET /api/tides/{location_id}`,
+`GET /api/weather/{location_id}`, `GET /health`.
 
 See [docs/plans/weather-api-provider.md](docs/plans/weather-api-provider.md) and
 [docs/integration/tight_lines_consumer.md](docs/integration/tight_lines_consumer.md).
@@ -208,6 +212,8 @@ Copy `.env.example` to `.env`. For live tides, set `TIDE_DATA_SOURCE=admiralty_d
 add your Admiralty Discovery subscription key — see
 [docs/integration/admiralty_discovery.md](docs/integration/admiralty_discovery.md).
 Use `TIDE_DATA_SOURCE=fixture` for offline development without signup.
+Use `WEATHER_DATA_SOURCE=fixture` (default) for current weather without an
+OpenWeatherMap key, or `WEATHER_DATA_SOURCE=openweather` with `OPENWEATHER_API_KEY`.
 
 Alternative YAML-backed API entry point: `uv run uvicorn src.api.main:app --reload --port 8001`.
 
@@ -215,7 +221,7 @@ Alternative YAML-backed API entry point: `uv run uvicorn src.api.main:app --relo
 
 1. Deploy this weather app first (port 8001 in dev).
 2. Deploy Tight Lines with `WEATHER_APP_BASE_URL` pointing at this service.
-3. Verify `GET /api/locations` and tide endpoints before enabling notifications.
+3. Verify `GET /api/locations`, tide, and weather endpoints before enabling notifications.
 
 ## Task runner mode
 

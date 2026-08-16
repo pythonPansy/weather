@@ -8,6 +8,7 @@ from src.weather.config import get_settings
 from src.weather.db import Base, get_session, reset_db_state
 from src.weather.main import create_app
 from src.weather.services.ingest import ingest_fixture_tides
+from src.weather.services.ingest_weather import ingest_fixture_weather
 from src.weather.services.locations import seed_locations
 
 
@@ -15,6 +16,7 @@ from src.weather.services.locations import seed_locations
 async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncClient, None]:
     monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
     monkeypatch.setenv("TIDE_DATA_SOURCE", "fixture")
+    monkeypatch.setenv("WEATHER_DATA_SOURCE", "fixture")
     get_settings.cache_clear()
     reset_db_state()
 
@@ -28,6 +30,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[AsyncClient,
     async with session_factory() as session:
         await seed_locations(session)
         await ingest_fixture_tides(session)
+        await ingest_fixture_weather(session)
 
     app = create_app(start_scheduler=False)
 

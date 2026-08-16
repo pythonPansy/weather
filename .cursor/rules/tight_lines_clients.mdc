@@ -1,0 +1,24 @@
+---
+description: Weather API serves Tight Lines website and iOS; admin UI stays on the Tight Lines website
+alwaysApply: true
+---
+
+# Tight Lines clients (website vs iOS)
+
+This repo has **no** iOS or website UI. Tight Lines consumes this API from two angler clients:
+
+- Website (Jinja / HTML)
+- Expo iOS app (`tight_lines_app/mobile/`)
+
+## Do this
+
+- Keep `/api/locations`, `/api/tides/{id}`, `/api/weather/{id}`, and any new angler endpoints usable by **both** Tight Lines clients with the same JSON contract.
+- When extending the API for a Tight Lines feature, assume website and iOS should both be able to call it (feature parity lives in Tight Lines, not here).
+
+## Do not
+
+- Add admin-only or operator consoles to this service for a mobile app.
+- Invent a second payload shape “for iOS” when the website already consumes the same resource.
+- Put user-management, catalogue CRUD, or moderation in this weather app — that belongs on the **Tight Lines website**, not iOS and not here.
+
+Native-only iOS behaviour (push, camera, offline) does not require weather-API changes unless the shared contract truly needs a new field.
