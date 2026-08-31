@@ -16,7 +16,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    database_url: str = "sqlite+aiosqlite:///./weather.db"
+    database_url: str = (
+        "postgresql+asyncpg://weather:weather@localhost:5433/weather"
+    )
     port: int = 8001
     tide_data_source: str = "fixture"
     admiralty_api_key: SecretStr = SecretStr("")

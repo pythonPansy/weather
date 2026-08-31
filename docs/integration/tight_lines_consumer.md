@@ -35,6 +35,7 @@ Forecast points include `forecast_at` instead of `observed_at`.
 
 ## Configuration
 
+- `DATABASE_URL` — `postgresql+asyncpg://…` (recommended) or `sqlite+aiosqlite:///./weather.db` (local only)
 - `WEATHER_DATA_SOURCE=fixture` (default) — deterministic observations, no API key
 - `WEATHER_DATA_SOURCE=openweather` — live current weather; set `OPENWEATHER_API_KEY`
 - `WEATHER_AT_TOLERANCE_HOURS` — matching window for `/at` (default 3)
