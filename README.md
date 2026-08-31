@@ -198,8 +198,17 @@ REST API for tide locations, predictions, and current weather on port **8001**
 
 ```bash
 uv sync --group dev
+docker compose up -d   # Postgres on localhost:5433 (optional; or use Neon URL in .env)
+cp .env.example .env
 uv run alembic upgrade head
 rtk uv run uvicorn src.weather.main:app --reload --port 8001
+```
+
+**Database:** Postgres is recommended for deployed environments (Neon, RDS, or
+`docker compose` locally). SQLite remains supported for quick offline dev:
+
+```bash
+DATABASE_URL=sqlite+aiosqlite:///./weather.db uv run alembic upgrade head
 ```
 
 Endpoints: `GET /api/locations`, `GET /api/tides/{location_id}`,
