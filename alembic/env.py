@@ -3,11 +3,12 @@ from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 from src.weather import models  # noqa: F401
 from src.weather.config import get_settings
+from src.weather.database_url import asyncpg_connect_args, normalise_database_url
 from src.weather.db import Base
 
 config = context.config
@@ -16,7 +17,8 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.database_url)
+database_url = normalise_database_url(settings.database_url)
+config.set_main_option("sqlalchemy.url", database_url)
 
 
 def run_migrations_offline() -> None:
@@ -39,10 +41,10 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connectable = create_async_engine(
+        database_url,
         poolclass=pool.NullPool,
+        connect_args=asyncpg_connect_args(settings.database_url),
     )
 
     async with connectable.connect() as connection:
