@@ -5,7 +5,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.weather.config import get_settings
@@ -15,6 +15,38 @@ from src.weather.services.admiralty_client import AdmiraltyClient
 from src.weather.services.phase import classify_high_tide_phase, classify_low_tide_phase
 
 logger = logging.getLogger(__name__)
+
+# Minimum extrema expected across the Discovery horizon for a location.
+_MIN_FRESH_TIDE_EVENTS = 4
+
+
+async def tide_store_is_fresh(session: AsyncSession) -> bool:
+    """True when every configured location already has horizon tide rows."""
+    settings = get_settings()
+    now = datetime.now(tz=UTC)
+    end = now + timedelta(days=settings.tide_forecast_days)
+
+    result = await session.execute(select(Location))
+    locations = list(result.scalars().all())
+    allowed_ids = settings.tide_location_id_list()
+    if allowed_ids:
+        locations = [loc for loc in locations if loc.id in allowed_ids]
+    if not locations:
+        return False
+
+    for location in locations:
+        count = await session.scalar(
+            select(func.count())
+            .select_from(TidePrediction)
+            .where(
+                TidePrediction.location_id == location.id,
+                TidePrediction.prediction_time >= now,
+                TidePrediction.prediction_time <= end,
+            )
+        )
+        if int(count or 0) < _MIN_FRESH_TIDE_EVENTS:
+            return False
+    return True
 
 
 def _fixture_high_height(mhws: Decimal, mhwn: Decimal, day_offset: int) -> Decimal:
@@ -187,12 +219,19 @@ async def ingest_admiralty_tides(session: AsyncSession) -> int:
     return total
 
 
-async def run_tide_ingest() -> int:
-    """Run tide ingestion according to configured data source."""
+async def run_tide_ingest(*, force: bool = False) -> int:
+    """Run tide ingestion according to configured data source.
+
+    When ``force`` is false and the store already covers the forecast horizon,
+    skip outbound/fixture work so Render cold starts do not re-poll Admiralty.
+    """
     settings = get_settings()
     factory = get_session_factory()
 
     async with factory() as session:
+        if not force and await tide_store_is_fresh(session):
+            logger.info("Tide store already fresh; skipping ingest")
+            return 0
         source = settings.tide_data_source.lower()
         if source == "fixture":
             return await ingest_fixture_tides(session)

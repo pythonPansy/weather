@@ -6,7 +6,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.weather.config import get_settings
@@ -221,12 +221,60 @@ async def ingest_openweather(session: AsyncSession) -> int:
     return total
 
 
-async def run_weather_ingest() -> int:
-    """Run weather ingestion according to configured data source."""
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
+async def weather_store_is_fresh(session: AsyncSession) -> bool:
+    """True when each location has a recent observation and upcoming forecasts."""
+    now = datetime.now(tz=UTC)
+    observation_cutoff = now - timedelta(hours=2)
+    forecast_horizon = now + timedelta(hours=12)
+
+    result = await session.execute(select(Location))
+    locations = list(result.scalars().all())
+    if not locations:
+        return False
+
+    for location in locations:
+        observation = await session.scalar(
+            select(WeatherObservation).where(
+                WeatherObservation.location_id == location.id
+            )
+        )
+        if observation is None:
+            return False
+        if _as_utc(observation.observed_at) < observation_cutoff:
+            return False
+        forecast_count = await session.scalar(
+            select(func.count())
+            .select_from(WeatherForecast)
+            .where(
+                WeatherForecast.location_id == location.id,
+                WeatherForecast.forecast_at >= now,
+                WeatherForecast.forecast_at <= forecast_horizon,
+            )
+        )
+        if int(forecast_count or 0) < 1:
+            return False
+    return True
+
+
+async def run_weather_ingest(*, force: bool = False) -> int:
+    """Run weather ingestion according to configured data source.
+
+    Skip when the store is already fresh unless ``force`` is set (cron may
+    still call without force; hourly job then becomes a no-op when warm).
+    """
     settings = get_settings()
     factory = get_session_factory()
 
     async with factory() as session:
+        if not force and await weather_store_is_fresh(session):
+            logger.info("Weather store already fresh; skipping ingest")
+            return 0
         source = settings.weather_data_source.lower()
         if source == "fixture":
             return await ingest_fixture_weather(session)

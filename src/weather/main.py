@@ -1,5 +1,6 @@
 """FastAPI application for tide, location, and current weather API."""
 
+import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -19,11 +20,26 @@ scheduler = AsyncIOScheduler()
 
 
 async def _daily_tide_ingest() -> None:
-    await run_tide_ingest()
+    await run_tide_ingest(force=True)
 
 
 async def _hourly_weather_ingest() -> None:
-    await run_weather_ingest()
+    await run_weather_ingest(force=True)
+
+
+async def _run_startup_ingest() -> None:
+    """Fill the store if empty/stale. Idempotent when already fresh."""
+    try:
+        ingested = await run_tide_ingest()
+        logger.info("Tide ingest complete: %s predictions stored", ingested)
+    except Exception as exc:
+        logger.warning("Tide ingest failed: %s", exc)
+
+    try:
+        weather_ingested = await run_weather_ingest()
+        logger.info("Weather ingest complete: %s observations stored", weather_ingested)
+    except Exception as exc:
+        logger.warning("Weather ingest failed: %s", exc)
 
 
 @asynccontextmanager
@@ -37,23 +53,26 @@ async def lifespan(
     async with get_session_factory()() as session:
         await seed_locations(session)
 
-    try:
-        ingested = await run_tide_ingest()
-        logger.info("Tide ingest complete: %s predictions stored", ingested)
-    except Exception as exc:
-        logger.warning("Tide ingest failed: %s", exc)
-
-    try:
-        weather_ingested = await run_weather_ingest()
-        logger.info("Weather ingest complete: %s observations stored", weather_ingested)
-    except Exception as exc:
-        logger.warning("Weather ingest failed: %s", exc)
-
+    ingest_task: asyncio.Task[None] | None = None
     if start_scheduler:
+        # Production: serve DB-backed APIs immediately; refresh in the background
+        # so Render cold starts do not block (or 429) client tide/forecast reads.
+        ingest_task = asyncio.create_task(_run_startup_ingest())
         scheduler.add_job(_daily_tide_ingest, "cron", hour=2, minute=0)
         scheduler.add_job(_hourly_weather_ingest, "cron", minute=0)
         scheduler.start()
+    else:
+        # Tests: await ingest so fixtures exist before the first request.
+        await _run_startup_ingest()
+
     yield
+
+    if ingest_task is not None and not ingest_task.done():
+        ingest_task.cancel()
+        try:
+            await ingest_task
+        except asyncio.CancelledError:
+            pass
     if start_scheduler:
         scheduler.shutdown()
 
